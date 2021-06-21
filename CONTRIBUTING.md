@@ -3,6 +3,7 @@
 ## Development Flow
 
 ```bash
+n 15 # cause: nodegit
 yarn install
 yarn dev
 ```
@@ -13,6 +14,9 @@ yarn dev
 - [pack-protocol](https://github.com/git/git/blob/master/Documentation/technical/pack-protocol.txt)
 - [pkt-line Format](https://github.com/git/git/blob/master/Documentation/technical/protocol-common.txt#L51)
 - [pkt-line v2](https://git-scm.com/docs/protocol-v2/en#_packet_line_framing)
+- [brew/Formula-Cookbook.md at master · Homebrew/brew](https://github.com/Homebrew/brew/blob/master/docs/Formula-Cookbook.md)
+- [s3fs - npm](https://www.npmjs.com/package/s3fs?activeTab=readme)
+- [all-contributors/app: 🤖 A GitHub App to automate acknowledging contributors to your open source projects](https://github.com/all-contributors/app)
 
 ## Note
 

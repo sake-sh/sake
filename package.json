@@ -1,12 +1,12 @@
 {
-  "name": "taproom",
-  "description": "taproom",
+  "name": "sake",
+  "description": "sake",
   "version": "0.0.0",
   "author": "Yasuaki Uechi <y@uechi.io> (https://uechi.io/)",
   "scripts": {
     "build": "npm run tsup -- --minify --dts",
     "clean": "shx rm -rf lib",
-    "dev": "npm run tsup -- --watch",
+    "dev": "LOG_LEVEL=trace DEBUG=app ts-node --files src",
     "prepublishOnly": "npm run clean && npm run build",
     "test": "jest",
     "tsup": "tsup src/index.ts -d lib"
@@ -18,31 +18,42 @@
   ],
   "dependencies": {
     "body-parser": "^1.19.0",
-    "express": "^4.17.1"
+    "debug": "^4.3.1",
+    "express": "^4.17.1",
+    "handlebars": "^4.7.7",
+    "node-fetch": "^2.6.1",
+    "node-git-server": "^0.6.1",
+    "nodegit": "^0.27.0",
+    "octokit": "^1.0.6",
+    "probot": "^11.4.1"
   },
   "devDependencies": {
+    "@types/debug": "^4.1.5",
     "@types/express": "^4.17.12",
     "@types/jest": "^26.0.23",
     "@types/node": "^15.12.4",
+    "@types/node-fetch": "^2.5.10",
+    "@types/nodegit": "^0.27.2",
     "jest": "^27.0.4",
     "nodemon": "^2.0.7",
     "shx": "^0.3.3",
+    "smee-client": "^1.2.2",
     "ts-jest": "^27.0.3",
     "ts-node": "^10.0.0",
     "tsup": "^4.11.2",
     "typescript": "^4.3.4"
   },
-  "homepage": "https://github.com/uetchy/taproom",
+  "homepage": "https://github.com/uetchy/sake",
   "repository": {
     "type": "git",
-    "url": "https://github.com/uetchy/taproom.git"
+    "url": "https://github.com/uetchy/sake.git"
   },
   "bugs": {
-    "url": "https://github.com/uetchy/taproom/issues"
+    "url": "https://github.com/uetchy/sake/issues"
   },
   "license": "Apache-2.0",
   "keywords": [
-    "taproom"
+    "sake"
   ],
   "engines": {
     "node": ">= 12.18.3"
