@@ -31,10 +31,6 @@ brew install gst
 
 ### Go
 
-### Node.js
-
-### Ruby
-
 ### Generic
 
 Anything that sake.sh failed to detect the language would fall into `generic` type (i.e., just-provide-binary type).
@@ -44,7 +40,4 @@ sake.sh will look out for arch-specific binaries in the release assets. If there
 ## Roadmap (Wishlist)
 
 - ✅ Basic functions
-- Automated cross-platform build for
-  - Node.js app (uses `pkg`)
-  - Go app (uses `gox`)
-  - Rust app (uses `cargo`)
+- Support more languages
