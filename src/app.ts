@@ -1,6 +1,7 @@
 import express, { Request, Response, Express } from "express";
 import { isDev } from "./constants";
 import { log } from "./util";
+import { badgen } from "badgen";
 
 function home(_req: Request, res: Response) {
   log("home");
@@ -11,18 +12,139 @@ function installationSuccess(req: Request, res: Response) {
   const id = req.query.installation_id;
   const action = req.query.setup_action;
   log("installation", id, action);
-  res.end(
-    "Installation completed. Create a new release on configured repositories to generate a formula."
-  );
+  res.end(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>sake.sh</title>
+  <style>
+    html, body {
+      height: 100%;
+      font-family: sans-serif;
+      flex-direction: column;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    h1 {
+      font-size: 50pt;
+    }
+
+  </style>
+</head>
+<body>
+<h1>🍶 sake.sh</h1>
+<p>Installation completed. Create a new release on configured repositories to generate a formula.</p>
+</body>
+</html>`);
 }
 
 function repoStub(req: Request, res: Response) {
   const repo = req.params.repo;
   log("repo stub", repo);
-  if (isDev) {
-    return res.end(`$ brew tap sake.sh/${repo} http://localhost:3000/${repo}`);
-  }
-  res.end(`$ brew tap sake.sh/${repo} https://sake.sh/${repo}`);
+  const hostname = isDev ? "http://localhost:3000" : "https://sake.sh";
+  res.contentType("html");
+
+  res.end(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>sake.sh</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: sans-serif;
+      text-align: center;
+    }
+
+    h1 {
+      margin-top: 100px;
+      font-size: 50pt;
+    }
+
+    pre {
+      margin: 40px 0;
+      padding: 40px;
+      background: linear-gradient(128deg, #ffad73, #ff117e);
+      font-size: 1.4em;
+      white-space: break-spaces;
+      color: white;
+    }
+
+    .select-all {
+      -webkit-user-select: all;
+      user-select: all;
+    }
+
+    .url {
+      background: rgb(231, 231, 231);
+      padding: 6px;
+      background: rgb(231, 231, 231);
+      border-radius: 2px;
+    }
+
+    .badge {
+      margin: 5px;
+    }
+
+    .badge-box {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    @media screen and (max-width: 700px) {
+      h1 {
+        font-size: 20pt;
+      }
+
+      pre {
+        padding: 20px;
+        font-size: 1em;
+      }
+    }
+  </style>
+</head>
+<body>
+<h1>🍶 sake.sh/${repo}</h1>
+<div class="badge-box">
+<img class="badge" src="${hostname}/${repo}/badge" alt="sake.sh badge" />
+<code class="url select-all">[![sake.sh badge](${hostname}/${repo}/badge)](${hostname}/${repo})</code>
+</div>
+<pre><code>$ </code><code class="select-all">brew tap sake.sh/${repo} ${hostname}/${repo}</code></pre>
+</body>
+</html>
+`);
+}
+
+function badge(req: Request, res: Response) {
+  const repo = req.params.repo;
+  const isFlat = req.query.flat;
+
+  const badge = badgen({
+    subject: "homebrew tap",
+    status: `sake.sh/${repo}`,
+    color: "FF117E",
+    style: isFlat ? "flat" : "classic",
+  });
+
+  res.setHeader("Content-Type", "image/svg+xml");
+  res.setHeader("Cache-Control", "maxage=10");
+  res.send(badge);
 }
 
 export function createApp({
@@ -39,6 +161,7 @@ export function createApp({
   app.get("/", home);
   app.get("/installation", installationSuccess);
   app.get("/:repo", repoStub);
+  app.get("/:repo/badge", badge);
 
   return app;
 }

@@ -2,7 +2,7 @@
 
 # sake.sh
 
-CI + CDN for Homebrew Taps.
+sake.sh is a CI + CDN for Homebrew Taps.
 
 ## How to use (for developers)
 
@@ -27,9 +27,23 @@ brew tap sake.sh/uetchy https://sake.sh/uetchy
 brew install gst
 ```
 
-## Supported Types
+## Supported types
 
 ### Go
+
+A formula that clones git repo and run `go build`.
+
+### Rust
+
+> Soon
+
+### Python
+
+> Soon
+
+### Node.js
+
+> Soon
 
 ### Generic
 
@@ -39,5 +53,8 @@ sake.sh will look out for arch-specific binaries in the release assets. If there
 
 ## Roadmap (Wishlist)
 
-- ✅ Basic functions
-- Support more languages
+- ✅ Basic functionality
+- Badge
+- Manually invoke formula generation
+- Formula config for advanced usage `sake.yml`
+- M1 support for generic type
