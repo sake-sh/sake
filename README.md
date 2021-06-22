@@ -22,8 +22,13 @@ You don't have to maintain a separate `homebrew-<name>` repository anymore. Ever
 
 ```bash
 brew tap sake.sh/<user|org> https://sake.sh/<user|org>
-brew tap sake.sh/uetchy https://sake.sh/uetchy
+brew install <package>
+```
 
+For instance, you can install [gst](https://github.com/uetchy/gst) from [sake.sh/uetchy](https://sake.sh/uetchy) tap.
+
+```bash
+brew tap sake.sh/uetchy https://sake.sh/uetchy
 brew install gst
 ```
 
@@ -31,7 +36,7 @@ brew install gst
 
 ### Go
 
-A formula that clones git repo and run `go build`.
+sake.sh produces a formula that clones git repo and runs `go build`.
 
 ### Rust
 
@@ -54,7 +59,7 @@ sake.sh will look out for arch-specific binaries in the release assets. If there
 ## Roadmap (Wishlist)
 
 - ✅ Basic functionality
-- Badge
+- ✅ Badge
 - Manually invoke formula generation
 - Formula config for advanced usage `sake.yml`
 - M1 support for generic type

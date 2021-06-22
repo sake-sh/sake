@@ -10,7 +10,6 @@ FROM node:15 as runtime
 
 WORKDIR /app
 COPY --from=build /app/package.json ./
-RUN yarn install --prod
 COPY --from=build /app/lib ./lib
 COPY --from=build /app/templates ./templates
 
