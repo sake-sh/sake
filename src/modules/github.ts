@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import fetch from "node-fetch";
 import { Octokit } from "octokit";
-import { Arch } from "./formula";
+import { Arch, Binaries, BinaryAsset, Ingredient } from "./formula";
 import { log } from "../util";
 import semver from "semver";
 import { WebhookEvent, EventPayloads } from "@octokit/webhooks";
@@ -76,27 +76,31 @@ export async function fetchLatestRelease(owner: string, repo: string) {
   return latest;
 }
 
-export async function parseRelease(
+export async function findBinaryAssets(
   release: EventPayloads.WebhookPayloadReleaseRelease
-) {
-  const version = release.tag_name;
-
-  const arch: { [index: string]: Arch } = {};
+): Promise<Binaries | undefined> {
+  const assets: Binaries = {};
   for (const asset of release.assets) {
     if (/darwin|mac/i.test(asset.name)) {
       // macOS
+      const isARM = /arm64/i.test(asset.name);
+      const arch = isARM ? "arm64" : "amd64";
       const url = asset.browser_download_url;
+      log("found darwin binary", url, arch);
+
+      // calculate sha256 hash
       const buffer = await fetch(url).then((res) => res.buffer());
       const sha256 = crypto.createHash("sha256").update(buffer).digest("hex");
-      // TODO: calculate sha256
-      arch["darwin"] = {
+
+      const key = `darwin_${arch}` as Arch;
+      assets[key] = {
         url,
         sha256,
       };
     }
   }
 
-  return { version, arch };
+  return Object.keys(assets).length > 0 ? assets : undefined;
 }
 
 export function isFreshVersion(version: string, previous: string): boolean {

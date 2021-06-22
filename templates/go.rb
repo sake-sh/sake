@@ -2,17 +2,40 @@ class {{capital name}} < Formula
   desc "{{description}}"
   version "{{version}}"
   homepage "{{homepage}}"
+  license "{{license}}"
+  head "{{head}}"
 
-  url "{{arch.darwin.url}}"
-  sha256 "{{arch.darwin.sha256}}"
+  url "{{head}}",
+    tag: "{{tag}}"
+
+  depends_on "go" => :build
 
   {{#each dependencies}}
   depends_on "{{name}}"
   {{/each}}
 
   def install
-    bin.install "{{basename arch.darwin.url}}" => "{{lower name}}"
+    {{#each install}}
+    {{this}}
+    {{/each}}
+
+    ldflags = %W[
+      -s -w
+      -X main.version={{version}}
+      -X main.commit=#{Utils.git_head}
+      -X main.builtBy=homebrew
+    ].join(" ")
+
+    system "go", "build", *std_go_args(ldflags: ldflags)
   end
+
+  {{#with test}}
+  test do
+    {{#each test}}
+    {{this}}
+    {{/each}}
+  end
+  {{/with}}
 
   {{#with postinstall}}
   def post_install

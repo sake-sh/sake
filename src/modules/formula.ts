@@ -3,23 +3,34 @@ import Handlebars from "handlebars";
 import path from "path";
 import { log } from "../util";
 
-export interface Arch {
+export interface BinaryAsset {
   url: string;
   sha256: string;
 }
 
-export type OS = "darwin" | "linux_intel" | "linux_arm64" | "linux_arm32";
+export type Arch = "darwin_amd64" | "darwin_arm64" | "linux_amd64";
+
+export type Binaries = {
+  [index in Arch]?: BinaryAsset;
+};
 
 export interface Ingredient {
   type: string;
-  version: string;
   name: string;
-  description: string | null;
   owner: string;
+  description: string | null;
+  version: string;
+  tag: string;
+  revision: string;
+  head: string;
+  tarballUrl: string;
   homepage: string | null;
-  arch: { [index: string]: Arch };
-  dependencies?: string[];
+  binaries?: Binaries;
+  license?: string;
+  dependencies?: { name: string }[];
+  install?: string[];
   postinstall?: string[];
+  test?: string[];
 }
 
 function split(word: string): string[] {

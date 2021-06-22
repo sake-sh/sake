@@ -1,16 +1,18 @@
+require "language/node"
+
 class {{capital name}} < Formula
-  include Language::Python::Shebang
-  
   desc "{{description}}"
   version "{{version}}"
   homepage "{{homepage}}"
   license "{{license}}"
   head "{{head}}"
+  
+  # url "https://registry.npmjs.org/{{lower name}}/-/{{lower name}}-{{version}}.tgz"
+  # sha256 "{{sha256}}"
+  url "{{head}}",
+    tag: "{{tag}}"
 
-  url "{{arch.darwin.url}}"
-  sha256 "{{arch.darwin.sha256}}"
-
-  depends_on "python@3.9"
+  depends_on "node"
 
   {{#each dependencies}}
   depends_on "{{name}}"
@@ -21,9 +23,11 @@ class {{capital name}} < Formula
     {{this}}
     {{/each}}
 
-    rewrite_shebang detected_python_shebang, "{{name}}"
+    system "npm", "install", *Language::Node.std_npm_install_args(libexec)
+
+    bin.install_symlink Dir["#{libexec}/bin/*"]
   end
-  
+
   {{#with test}}
   test do
     {{#each test}}

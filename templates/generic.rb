@@ -3,15 +3,15 @@ class {{capital name}} < Formula
   version "{{version}}"
   homepage "{{homepage}}"
 
-  url "{{arch.darwin.url}}"
-  sha256 "{{arch.darwin.sha256}}"
+  url "{{binaries.darwin_amd64.url}}"
+  sha256 "{{binaries.darwin_amd64.sha256}}"
 
   {{#each dependencies}}
   depends_on "{{name}}"
   {{/each}}
   
   def install
-    bin.install "{{basename arch.darwin.url}}" => "{{lower name}}"
+    bin.install "{{basename binaries.darwin_amd64.url}}" => "{{lower name}}"
   end
 
   {{#with postinstall}}

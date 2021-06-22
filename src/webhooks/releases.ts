@@ -3,7 +3,7 @@ import { join } from "path";
 import { COMMITTER, GIT_ROOT, isDev, TEMPLATES_ROOT } from "../constants";
 import { generateFormula, Ingredient } from "../modules/formula";
 import { Barrel } from "../modules/git";
-import { isFreshVersion, parseRelease } from "../modules/github";
+import { isFreshVersion, findBinaryAssets } from "../modules/github";
 import { log } from "../util";
 
 /**
@@ -42,35 +42,34 @@ export async function handleReleases(
   const cached = await barrel.getVersion(formulaPath);
   console.log("present:", ingredient.version, "cached:", cached);
   if (!isFreshVersion(ingredient.version, cached)) {
-    log("outdated version");
+    console.log("outdated version");
     return;
   }
 
   // generate formula
   const templatePath = join(TEMPLATES_ROOT, `${ingredient.type}.rb`);
-  console.log(templatePath);
   const formula = generateFormula(templatePath, ingredient);
 
   if (!formula) {
-    log("failed to generate formula");
+    console.log("failed to generate formula");
     return;
   }
 
-  // commit formula
-  const commitOID = await barrel.updateAndCommitContent(formulaPath, formula);
+  // add formula
+  await barrel.addOrUpdateFile(formulaPath, formula);
+
+  // add version cache
+  await barrel.updateVersion(formulaPath, ingredient.version);
+
+  const commitMessage = `update: ${ingredient.name}@${ingredient.version}`;
+
+  const commitOID = await barrel.commitChanges(commitMessage);
   if (!commitOID) {
-    console.log("No changes");
+    console.log("no changes");
     return;
   }
 
-  // cache current version
-  await barrel.saveVersion(formulaPath, ingredient.version);
-
-  console.log(
-    `New commit: ${ingredient.name}@${
-      ingredient.version
-    } (${commitOID.toString()})`
-  );
+  console.log(`new commit: "${commitMessage}" ${commitOID.tostrS()}`);
 }
 
 async function collectIngredientFromReleasePayload(
@@ -79,12 +78,18 @@ async function collectIngredientFromReleasePayload(
   const { repository, release } = payload;
   // TODO: use 'name' and 'version' from package.json if exists
   const { name, description } = repository;
-  const owner = repository.owner.login;
-  const homepage = repository.homepage || repository.html_url;
 
   const type = repository.language?.toLowerCase() ?? "generic";
-
-  const { version, arch } = await parseRelease(release);
+  const version = release.tag_name;
+  const owner = repository.owner.login;
+  const homepage = repository.homepage || repository.html_url;
+  const license = repository.license?.name;
+  const head = repository.clone_url;
+  const tarballUrl = release.tarball_url;
+  const binaries =
+    type === "generic" ? await findBinaryAssets(release) : undefined;
+  const tag = release.tag_name;
+  const revision = release.target_commitish;
 
   // Overwrite config
   // const config = await getConfig(owner, name);
@@ -96,7 +101,12 @@ async function collectIngredientFromReleasePayload(
     description,
     owner,
     homepage,
-    arch,
+    tarballUrl,
+    binaries,
+    head,
+    license,
+    tag,
+    revision,
   };
 
   return ingredient;
