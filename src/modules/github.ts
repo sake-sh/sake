@@ -2,13 +2,14 @@ import crypto from "crypto";
 import fetch from "node-fetch";
 import { Octokit } from "octokit";
 import { Arch } from "./formula";
-import { log } from "./util";
+import { log } from "../util";
+import semver from "semver";
+import { WebhookEvent, EventPayloads } from "@octokit/webhooks";
+import { SAKE_CONFIG_NAME } from "../constants";
 
 export interface SakeConfig {
   language?: string;
 }
-
-const SAKE_CONFIG_NAME = "barrel.json";
 
 export async function isValidGitHubUser(username: string) {
   // const octokit = new Octokit({auth: ''});
@@ -75,12 +76,13 @@ export async function fetchLatestRelease(owner: string, repo: string) {
   return latest;
 }
 
-export async function parseReleases(owner: string, name: string) {
-  const latest = await fetchLatestRelease(owner, name);
-  const version = latest.tag_name;
+export async function parseRelease(
+  release: EventPayloads.WebhookPayloadReleaseRelease
+) {
+  const version = release.tag_name;
 
   const arch: { [index: string]: Arch } = {};
-  for (const asset of latest.assets) {
+  for (const asset of release.assets) {
     if (/darwin|mac/i.test(asset.name)) {
       // macOS
       const url = asset.browser_download_url;
@@ -95,4 +97,17 @@ export async function parseReleases(owner: string, name: string) {
   }
 
   return { version, arch };
+}
+
+export function isFreshVersion(version: string, previous: string): boolean {
+  version = version.replace(/^v/, "");
+  previous = previous.replace(/^v/, "");
+  try {
+    return semver.gte(version, previous, {
+      loose: true,
+    });
+  } catch (err) {
+    // byte order comparison over non-semver
+    return version >= previous;
+  }
 }

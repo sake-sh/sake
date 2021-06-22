@@ -4,7 +4,7 @@
 
 import { raw } from "body-parser";
 import express from "express";
-import { log } from "./util";
+import { log } from "../util";
 
 function app() {
   const app = express();

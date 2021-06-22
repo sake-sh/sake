@@ -1,3 +1,3 @@
 import debug from "debug";
 
-export const log = debug("app");
+export const log = debug("sake");

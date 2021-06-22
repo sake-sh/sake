@@ -1,5 +1,3 @@
-require 'formula'
-
 class {{capital name}} < Formula
   desc "{{description}}"
   version "{{version}}"

@@ -3,6 +3,7 @@
 ## Development Flow
 
 ```bash
+# edit .env
 n 15 # cause: nodegit
 yarn install
 yarn dev

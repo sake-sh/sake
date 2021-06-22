@@ -1,12 +1,24 @@
-require "formula"
-
 class {{capital name}} < Formula
+  desc "{{description}}"
   version "{{version}}"
+  homepage "{{homepage}}"
 
-  url "{{url}}"
-  sha256 "{{sha256}}"
+  url "{{arch.darwin.url}}"
+  sha256 "{{arch.darwin.sha256}}"
 
+  {{#each dependencies}}
+  depends_on "{{name}}"
+  {{/each}}
+  
   def install
-    bin.install "{{lower name}}"
+    bin.install "{{basename arch.darwin.url}}" => "{{lower name}}"
   end
+
+  {{#with postinstall}}
+  def post_install
+    {{#each postinstall}}
+    {{this}}
+    {{/each}}
+  end
+  {{/with}}
 end

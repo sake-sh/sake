@@ -1,0 +1,10 @@
+node_modules
+.env*
+.envrc
+/data
+/lib
+*.log
+*.pem
+.github
+.vscode
+/tests

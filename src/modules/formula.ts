@@ -1,7 +1,26 @@
 import { readFileSync } from "fs";
 import Handlebars from "handlebars";
 import path from "path";
-import { log } from "./util";
+import { log } from "../util";
+
+export interface Arch {
+  url: string;
+  sha256: string;
+}
+
+export type OS = "darwin" | "linux_intel" | "linux_arm64" | "linux_arm32";
+
+export interface Ingredient {
+  type: string;
+  version: string;
+  name: string;
+  description: string | null;
+  owner: string;
+  homepage: string | null;
+  arch: { [index: string]: Arch };
+  dependencies?: string[];
+  postinstall?: string[];
+}
 
 function split(word: string): string[] {
   return word.split(/[-_\s]+/);
@@ -53,27 +72,11 @@ function kebab(text: string) {
 }
 Handlebars.registerHelper("kebab", kebab);
 
-function basename(text: string) {
+function basename(text: string | undefined) {
+  if (!text) return text;
   return path.basename(text);
 }
 Handlebars.registerHelper("basename", basename);
-
-export interface Arch {
-  url: string;
-  sha256: string;
-}
-
-export type OS = "darwin" | "linux_intel" | "linux_arm64" | "linux_arm32";
-
-export interface Ingredient {
-  name: string;
-  version: string;
-  arch: { [index: string]: Arch };
-  description: string | null;
-  homepage: string | null;
-  dependencies?: string[];
-  postinstall?: string[];
-}
 
 export function generateFormula(scaffoldPath: string, args: Ingredient) {
   try {

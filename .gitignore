@@ -3,6 +3,7 @@ package-lock.json
 yarn.lock
 .envrc
 /data
+/lib
 *.pem
 
 # Created by https://www.toptal.com/developers/gitignore/api/node
