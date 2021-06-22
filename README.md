@@ -61,5 +61,8 @@ sake.sh will look out for arch-specific binaries in the release assets. If there
 - ✅ Basic functionality
 - ✅ Badge
 - Manually invoke formula generation
-- Formula config for advanced usage `sake.yml`
+- Formula listing
+- Versioned formula (e.g. `gst@2`)
+- Edge formula (e.g. `gst@edge`)
+- Formula config for advanced usage (.e.g `sake.yml`)
 - M1 support for generic type

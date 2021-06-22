@@ -122,8 +122,8 @@ function repoStub(req: Request, res: Response) {
 <body>
 <h1>🍶 sake.sh/${repo}</h1>
 <div class="badge-box">
-<img class="badge" src="${hostname}/${repo}/badge" alt="sake.sh badge" />
-<code class="url select-all">[![sake.sh badge](${hostname}/${repo}/badge)](${hostname}/${repo})</code>
+<img class="badge" src="${hostname}/${repo}/badge.svg" alt="sake.sh badge" />
+<code class="url select-all">[![sake.sh badge](${hostname}/${repo}/badge.svg)](${hostname}/${repo})</code>
 </div>
 <pre><code>$ </code><code class="select-all">brew tap sake.sh/${repo} ${hostname}/${repo}</code></pre>
 </body>
@@ -133,7 +133,7 @@ function repoStub(req: Request, res: Response) {
 
 function badge(req: Request, res: Response) {
   const repo = req.params.repo;
-  const isFlat = req.query.flat;
+  const isFlat = "flat" in req.query;
 
   const badge = badgen({
     subject: "homebrew tap",
@@ -143,7 +143,7 @@ function badge(req: Request, res: Response) {
   });
 
   res.setHeader("Content-Type", "image/svg+xml");
-  res.setHeader("Cache-Control", "maxage=10");
+  res.setHeader("Cache-Control", "maxage=3600");
   res.send(badge);
 }
 
@@ -161,7 +161,7 @@ export function createApp({
   app.get("/", home);
   app.get("/installation", installationSuccess);
   app.get("/:repo", repoStub);
-  app.get("/:repo/badge", badge);
+  app.get("/:repo/badge(.svg)?", badge);
 
   return app;
 }
