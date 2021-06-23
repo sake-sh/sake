@@ -30,7 +30,7 @@ release released
  */
 
 const app = (app: Probot) => {
-  console.log("Webhooks started", app.version, isDev ? "dev" : "prod");
+  console.log(`Webhooks started ${app.version} (${isDev ? "dev" : "prod"})`);
 
   app.on("installation", handleInstallation);
   app.on("release", handleReleases);

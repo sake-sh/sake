@@ -8,7 +8,7 @@ function home(_req: Request, res: Response) {
   res.redirect("https://github.com/apps/sake-sh");
 }
 
-function installationSuccess(req: Request, res: Response) {
+function installation(req: Request, res: Response) {
   const id = req.query.installation_id;
   const action = req.query.setup_action;
   log("installation", id, action);
@@ -42,8 +42,8 @@ function installationSuccess(req: Request, res: Response) {
 </html>`);
 }
 
-function repoStub(req: Request, res: Response) {
-  const repo = req.params.repo;
+function repo(req: Request, res: Response) {
+  const repo = encodeURIComponent(req.params.repo);
   log("repo stub", repo);
   const hostname = isDev ? "http://localhost:3000" : "https://sake.sh";
   res.contentType("html");
@@ -152,15 +152,13 @@ export function createApp({
 }: { inject?: (app: Express) => void } = {}) {
   const app = express();
 
-  app.disable("x-powered-by");
-
   // inject middlewares
   if (inject) inject(app);
 
   // define routes
   app.get("/", home);
-  app.get("/installation", installationSuccess);
-  app.get("/:repo", repoStub);
+  app.get("/api/installation", installation);
+  app.get("/:repo", repo);
   app.get("/:repo/badge(.svg)?", badge);
 
   return app;
