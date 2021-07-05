@@ -56,7 +56,12 @@ const app = (app: Probot) => {
     console.log("new", refType, ref, "created", description);
   });
   app.on("delete", (context) => {
-    console.log("delete", context.name, context.payload);
+    console.log(
+      "delete",
+      context.name,
+      context.payload.ref,
+      context.payload.ref_type
+    );
   });
   app.on("meta", (context) => {
     console.log("meta", context.name);
@@ -70,11 +75,10 @@ const app = (app: Probot) => {
 export default app;
 
 export function createWebhooksHandler() {
-  const probot = createProbot({
-    overrides: {
-      webhookPath: "/api/webhook",
-    },
-  });
+  const probot = createProbot();
 
-  return createNodeMiddleware(app, { probot });
+  return createNodeMiddleware(app, {
+    probot,
+    webhookPath: "/api/webhook",
+  });
 }

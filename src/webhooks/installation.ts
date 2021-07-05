@@ -1,9 +1,7 @@
-import { WebhookEvent, EventPayloads } from "@octokit/webhooks";
+import { Context } from "probot";
 import { log } from "../util";
 
-export async function handleInstallation(
-  context: WebhookEvent<EventPayloads.WebhookPayloadInstallation>
-) {
+export async function handleInstallation(context: Context<"installation">) {
   const { action, installation } = context.payload;
   console.log(context.name, action); // created,deleted,suspend,unsuspend
   const login = installation.account.login;

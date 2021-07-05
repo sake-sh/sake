@@ -8,7 +8,12 @@ export interface BinaryAsset {
   sha256: string;
 }
 
-export type Arch = "darwin_amd64" | "darwin_arm64" | "linux_amd64";
+export const AVAILABLE_ARCH = [
+  "darwin_amd64",
+  "darwin_arm64",
+  "linux_amd64",
+] as const;
+export type Arch = typeof AVAILABLE_ARCH[number];
 
 export type Binaries = {
   [index in Arch]?: BinaryAsset;
@@ -18,12 +23,13 @@ export interface Ingredient {
   type: string;
   name: string;
   owner: string;
-  description: string | null;
   version: string;
   tag: string;
   revision: string;
   head: string;
-  tarballUrl: string;
+  lang: Lang;
+  description: string | null;
+  tarballUrl: string | null;
   homepage: string | null;
   binaries?: Binaries;
   license?: string;
@@ -31,6 +37,14 @@ export interface Ingredient {
   install?: string[];
   postinstall?: string[];
   test?: string[];
+}
+
+export interface Lang {
+  js?: Js;
+}
+
+export interface Js {
+  needsBuild: boolean;
 }
 
 function split(word: string): string[] {

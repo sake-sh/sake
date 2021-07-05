@@ -4,7 +4,7 @@
 
 ```bash
 # edit .env
-n 15 # cause: nodegit
+n 15 # reason: nodegit won't work on Node 16
 yarn install
 yarn dev
 ```

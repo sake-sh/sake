@@ -1,19 +1,41 @@
-import { NextFunction, Request, Response } from "express";
+import { Request, Response } from "express";
+import fs from "fs/promises";
 import NodeGitServer from "node-git-server";
 import NodeGit, { Commit, Repository, Treebuilder } from "nodegit";
-import { basename, dirname, resolve } from "path";
-import { GIT_ROOT, isDev } from "../constants";
+import { join, resolve } from "path";
+import { COMMITTER, GIT_ROOT } from "../constants";
 import { log } from "../util";
+import { Ingredient } from "./formula";
+
+interface Committer {
+  name: string;
+  email: string;
+}
+
+interface Formula {
+  name: string;
+  sha: string;
+}
+
+interface Meta {
+  metaVersion: string;
+  ingredient?: Ingredient;
+}
+
+interface BarrelOptions {
+  committer: Committer;
+  branch?: string;
+  create?: boolean;
+}
+
+const DEFAULT_META: Meta = {
+  metaVersion: "0",
+  ingredient: undefined,
+};
 
 export async function authenticate({ type, repo }: GitAuthArgs) {
   log("auth", type, repo);
-
-  // const isValid = await isValidRepo(repo);
-  const isValid = true;
-
-  if (isValid) return;
-
-  throw new Error("requested user/org is not existed on GitHub");
+  // TODO: need to authenticate anyway?
 }
 
 export function createGitHandler() {
@@ -49,22 +71,71 @@ export function createGitHandler() {
   };
 }
 
+export class Taproom {
+  constructor(
+    private gitDir: string,
+    private defaultCommitter: Committer = COMMITTER
+  ) {}
+
+  async repos(): Promise<string[]> {
+    const dir = (await fs.readdir(this.gitDir)).map((ent) =>
+      ent.replace(/\.git$/, "")
+    );
+    return dir;
+  }
+
+  async exists(repo: string): Promise<boolean> {
+    try {
+      const stat = await fs.stat(join(this.gitDir, repo + ".git"));
+      return stat.isDirectory();
+    } catch (err) {
+      return false;
+    }
+  }
+
+  async getFormulae(repo: string) {
+    const barrel = await this.openBarrel(repo);
+    return barrel?.listFormulae();
+  }
+
+  async getFormulaMeta(repo: string, formula: string) {
+    const barrel = await this.openBarrel(repo);
+    return barrel?.getMeta(formula);
+  }
+
+  private openBarrel(
+    repo: string,
+    args: BarrelOptions = { committer: this.defaultCommitter }
+  ) {
+    const mergedArgs = Object.assign(
+      { committer: this.defaultCommitter },
+      args
+    );
+    return Barrel.open(this.gitDir, repo, mergedArgs);
+  }
+}
+
 export class Barrel {
   private gr!: Repository;
   private builder!: Treebuilder;
 
-  static async init(
-    gitDir: string,
-    repo: string,
-    args: { committer: { name: string; email: string }; branch?: string }
-  ) {
+  static async openOrInit(gitDir: string, repo: string, args: BarrelOptions) {
     const instance = await new Barrel(
       gitDir,
       repo,
       args.branch || "master",
-      args.committer.name,
-      args.committer.email
-    ).openOrInitRepo();
+      args.committer
+    ).openRepo({ create: true });
+    return instance!;
+  }
+
+  static async open(gitDir: string, repo: string, args: BarrelOptions) {
+    const instance = await new Barrel(
+      gitDir,
+      repo,
+      args.branch || "master",
+      args.committer
+    ).openRepo({ create: false });
     return instance;
   }
 
@@ -72,30 +143,80 @@ export class Barrel {
     private gitDir: string,
     private repo: string,
     private branch: string,
-    private committerName: string,
-    private committerEmail: string
+    private defaultCommitter: Committer
   ) {}
 
-  async getVersion(path: string) {
-    const latestMeta = this.getMetaName(path);
-    const latest = await this.getFileContents(latestMeta);
-    if (!latest) {
-      await this.addOrUpdateAndCommitFile(latestMeta, "0");
-      return "0";
+  async listFormulae(): Promise<Formula[]> {
+    const headCommit = await this.gr.getBranchCommit("master");
+    const tree = await headCommit.getTree();
+    const entries = tree
+      .entries()
+      .filter((entry) => /^[\w]+\.rb$/.test(entry.name()))
+      .map((entry) => ({
+        name: entry.name().replace(/\.rb$/, ""),
+        sha: entry.sha(),
+      }));
+    return entries;
+  }
+
+  async getMeta(formula: string): Promise<Meta> {
+    const metaFilePath = this.getMetaFilePath(formula + ".rb");
+    const meta = await this.getFileContents(metaFilePath);
+    if (!meta) {
+      await this.addOrUpdateAndCommitFile(
+        metaFilePath,
+        JSON.stringify(DEFAULT_META)
+      );
+      return DEFAULT_META;
     }
-    return latest;
+    return JSON.parse(meta);
   }
 
-  async updateVersion(path: string, version: string) {
-    const latestMeta = this.getMetaName(path);
-    await this.addOrUpdateFile(latestMeta, String(version));
+  async updateMeta(formula: string, meta: Meta) {
+    const latestMeta = this.getMetaFilePath(formula + ".rb");
+    await this.addOrUpdateFile(latestMeta, JSON.stringify(meta));
   }
 
-  private getMetaName(path: string) {
-    return `${path}.latest`;
+  async addOrUpdateFile(filePath: string, fileContents: string) {
+    const buf = Buffer.from(fileContents, "utf-8");
+    const oid = await NodeGit.Blob.createFromBuffer(this.gr, buf, buf.length);
+    await this.builder.insert(filePath, oid, NodeGit.TreeEntry.FILEMODE.BLOB);
   }
 
-  private async openOrInitRepo() {
+  async commitChanges(
+    message: string,
+    noParent: boolean = false,
+    committer?: Committer
+  ) {
+    log("commitChanges");
+    // check diff
+    const headCommit = await this.gr.getBranchCommit(this.branch);
+    const isChanged = await this.isChanged(this.branch, headCommit);
+    if (!isChanged) return;
+
+    const sig = NodeGit.Signature.now(
+      committer?.name ?? this.defaultCommitter.name,
+      committer?.email ?? this.defaultCommitter.email
+    );
+
+    const treeOID = await this.builder.write();
+
+    return this.gr.createCommit(
+      "HEAD",
+      sig,
+      sig,
+      message,
+      treeOID,
+      noParent ? [] : [headCommit]
+    );
+  }
+
+  private getMetaFilePath(path: string) {
+    return `${path}.meta`;
+  }
+
+  private async openRepo({ create = false }: { create?: boolean } = {}) {
+    log("openOrInitRepo", this.repo);
     const repoPath = resolve(this.gitDir, this.repo + ".git");
     try {
       // open
@@ -106,6 +227,8 @@ export class Barrel {
       return this;
     } catch (err) {
       // init
+      if (!create) return;
+
       this.gr = await NodeGit.Repository.init(repoPath, 1);
       const tree = await this.gr.getTree(
         await (await this.gr.index()).writeTree()
@@ -127,35 +250,6 @@ export class Barrel {
     // commit changes
     const commitOID = await this.commitChanges(`update: ${path}`);
     return commitOID;
-  }
-
-  async addOrUpdateFile(filePath: string, fileContents: string) {
-    const buf = Buffer.from(fileContents, "utf-8");
-    const oid = await NodeGit.Blob.createFromBuffer(this.gr, buf, buf.length);
-    await this.builder.insert(filePath, oid, NodeGit.TreeEntry.FILEMODE.BLOB);
-  }
-
-  async commitChanges(message: string, noParent: boolean = false) {
-    // check diff
-    const headCommit = await this.gr.getBranchCommit(this.branch);
-    const isChanged = await this.isChanged(this.branch, headCommit);
-    if (!isChanged) return;
-
-    const committer = NodeGit.Signature.now(
-      this.committerName,
-      this.committerEmail
-    );
-
-    const treeOID = await this.builder.write();
-
-    return this.gr.createCommit(
-      "HEAD",
-      committer,
-      committer,
-      message,
-      treeOID,
-      noParent ? [] : [headCommit]
-    );
   }
 
   private async isChanged(branch: string, commit: Commit) {
