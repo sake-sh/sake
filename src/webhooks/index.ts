@@ -79,6 +79,6 @@ export function createWebhooksHandler() {
 
   return createNodeMiddleware(app, {
     probot,
-    webhookPath: "/api/webhook",
+    webhooksPath: "/api/webhooks",
   });
 }
