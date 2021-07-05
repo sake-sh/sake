@@ -190,9 +190,13 @@ export class Barrel {
   ) {
     log("commitChanges");
     // check diff
-    const headCommit = await this.gr.getBranchCommit(this.branch);
-    const isChanged = await this.isChanged(this.branch, headCommit);
-    if (!isChanged) return;
+    const parents = [];
+    if (!noParent) {
+      const headCommit = await this.gr.getBranchCommit(this.branch);
+      const isChanged = await this.isChanged(this.branch, headCommit);
+      if (!isChanged) return;
+      parents.push(headCommit);
+    }
 
     const sig = NodeGit.Signature.now(
       committer?.name ?? this.defaultCommitter.name,
@@ -201,14 +205,7 @@ export class Barrel {
 
     const treeOID = await this.builder.write();
 
-    return this.gr.createCommit(
-      "HEAD",
-      sig,
-      sig,
-      message,
-      treeOID,
-      noParent ? [] : [headCommit]
-    );
+    return this.gr.createCommit("HEAD", sig, sig, message, treeOID, parents);
   }
 
   private getMetaFilePath(path: string) {
