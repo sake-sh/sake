@@ -14,10 +14,9 @@ const app = createApp({
   inject: (app) => {
     if (!isDev) app.use(helmet());
     if (!isDev) app.use(webhooksHandler);
+    app.use(gitHandler);
   },
 });
-
-app.use(gitHandler);
 
 const server = http.createServer(app);
 

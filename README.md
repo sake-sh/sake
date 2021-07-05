@@ -2,6 +2,8 @@
 
 # sake.sh
 
+[![Actions Status: test](https://github.com/sake-sh/sake/workflows/test/badge.svg)](https://github.com/sake-sh/sake/actions?query=test)
+
 sake.sh is a CI + CDN for Homebrew Taps.
 
 ## How to use (for developers)
@@ -25,7 +27,7 @@ brew tap sake.sh/<user|org> https://sake.sh/<user|org>
 brew install <package>
 ```
 
-For instance, you can install [gst](https://github.com/uetchy/gst) from [sake.sh/uetchy](https://sake.sh/uetchy) tap.
+For instance, you can install [gst](https://github.com/uetchy/gst) from [sake.sh/uetchy](https://sake.sh/uetchy/gst) tap.
 
 ```bash
 brew tap sake.sh/uetchy https://sake.sh/uetchy
@@ -38,15 +40,11 @@ brew install gst
 
 sake.sh produces a formula that clones git repo and runs `go build`.
 
+### Node.js (JavaScript / TypeScript)
+
+sake.sh produces a formula that clones git repo and runs `npm install` and `npm build` (if needed).
+
 ### Rust
-
-> Soon
-
-### Python
-
-> Soon
-
-### Node.js
 
 > Soon
 
@@ -60,9 +58,9 @@ sake.sh will look out for arch-specific binaries in the release assets. If there
 
 - ✅ Basic functionality
 - ✅ Badge
+- ✅ Formula listing
+- ✅ Formula config for advanced usage (.e.g `sake.yml`)
 - Manually invoke formula generation
-- Formula listing
 - Versioned formula (e.g. `gst@2`)
 - Edge formula (e.g. `gst@edge`)
-- Formula config for advanced usage (.e.g `sake.yml`)
 - M1 support for generic type

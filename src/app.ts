@@ -1,4 +1,4 @@
-import express, { Express } from "express";
+import express, { Express, Request, Response, NextFunction } from "express";
 import { getFormula, listFormulae } from "./routes/api";
 import { badge, badgeWithCount } from "./routes/badge";
 import { formula } from "./routes/formula";
@@ -38,6 +38,16 @@ export function createApp({
   app.get("/:repo/badge/count(.svg)?", badgeWithCount);
 
   app.get("/:repo/:formula", formula);
+
+  app.use(function (
+    err: Error,
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    console.error(err.stack);
+    res.status(500).send("Something broke!");
+  });
 
   return app;
 }
