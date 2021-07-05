@@ -7,15 +7,16 @@ import helmet from "helmet";
 
 const port = process.env.PORT || 3000;
 
-const app = createApp({
-  inject: (app) => {
-    app.use(helmet());
-  },
-});
 const gitHandler = createGitHandler();
 const webhooksHandler = createWebhooksHandler();
 
-if (!isDev) app.use(webhooksHandler);
+const app = createApp({
+  inject: (app) => {
+    app.use(helmet());
+    if (!isDev) app.use(webhooksHandler);
+  },
+});
+
 app.use(gitHandler);
 
 const server = http.createServer(app);
