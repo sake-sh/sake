@@ -151,7 +151,7 @@ export class Barrel {
     const tree = await headCommit.getTree();
     const entries = tree
       .entries()
-      .filter((entry) => /^[\w]+\.rb$/.test(entry.name()))
+      .filter((entry) => /^[^\/]+\.rb$/.test(entry.name()))
       .map((entry) => ({
         name: entry.name().replace(/\.rb$/, ""),
         sha: entry.sha(),
