@@ -12,7 +12,7 @@ const webhooksHandler = createWebhooksHandler();
 
 const app = createApp({
   inject: (app) => {
-    app.use(helmet());
+    if (!isDev) app.use(helmet());
     if (!isDev) app.use(webhooksHandler);
   },
 });
