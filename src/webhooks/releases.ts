@@ -53,6 +53,12 @@ export async function handleReleases(context: Context<"release">) {
   );
   log(ingredient);
 
+  // check if there's assets to serve
+  if (Object.keys(ingredient.lang).length === 0 && !ingredient.binaries) {
+    console.log("no assets to serve. aborting.");
+    return;
+  }
+
   // compare version and ignore if it is lower than previous one
   const formulaName = ingredient.name;
   const formulaPath = `${formulaName}.rb`;
@@ -144,6 +150,7 @@ async function collectIngredientFromReleasePayload(
         const pkgJson = JSON.parse(pkgJsonStr) as PackageJson;
         console.log("package.json", pkgJson);
         if (pkgJson.name) name = pkgJson.name;
+        if (typeof pkgJson.bin === "object") name = Object.keys(pkgJson.bin)[0];
         if (pkgJson?.scripts?.build) {
           lang.js.needsBuild = true;
         }
@@ -154,7 +161,7 @@ async function collectIngredientFromReleasePayload(
   }
 
   // overwrite config
-  const config = await getConfig({ owner, repo });
+  const config = await getConfig({ owner, repo, octokit });
   console.log("config", config);
   if (config) {
     if (config.name && isValidName(config.name)) {

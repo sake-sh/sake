@@ -2,6 +2,7 @@ import { ProbotOctokit } from "probot";
 import semver from "semver";
 import { SAKE_CONFIG_NAME } from "../constants";
 import { log, Octokit } from "../util";
+import yaml from "js-yaml";
 
 const DEFAULT_OCTOKIT = new ProbotOctokit();
 
@@ -57,6 +58,7 @@ export async function getContent({
       ).toString();
     }
   } catch (err) {
+    console.log(err);
     if (err.status === 404) {
       return undefined;
     }
@@ -82,7 +84,12 @@ export async function getConfig({
     octokit,
   });
   if (content) {
-    return JSON.parse(content);
+    try {
+      return yaml.load(content) as SakeConfig | undefined;
+    } catch (err) {
+      console.log(err);
+      return undefined;
+    }
   } else {
     return undefined;
   }
